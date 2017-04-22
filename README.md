@@ -5,7 +5,7 @@ I'm not sure how to describe this thing.
 
 ## Controls
 
-WSAD/arrow keys for movement, CTRL to fly around.
+WSAD/arrow keys for movement, SHIFT to fly around.
 
 ## Running
 
