@@ -1,0 +1,108 @@
+// Do not place here anything but variables and mixins
+
+$ring-unit: 8px;
+
+$ring-text-color: #444;
+
+$ring-link-color: #1866C5;
+$ring-link-hover-color: #FF5A00;
+
+$ring-error-color: #C10000;
+
+$ring-gray-color: #BBB; /* disabled text & hints */
+$ring-dark-gray-color: #999; /* headers & actions */
+
+$ring-green-color: #4DA400;
+$ring-blue-color: #25B7FF;
+$ring-light-blue-color: #E9F8FF;
+$ring-pale-blue-color: #A6D5ED;
+$ring-pink-color: #BC00DE;
+
+$ring-border-color: rgba(0, 0, 0, 0.2);
+$ring-outline-color: rgba(37, 183, 255, 0.5);
+
+$ring-border-radius: 3px;
+
+$ring-font-size: 13px;
+$ring-font-size-smaller: 11px;
+
+@mixin ring-clearfix() {
+  &:after {
+    clear: both;
+    content: '';
+    display: block;
+  }
+}
+
+@mixin ring-font($font-size: $ring-font-size) {
+  color: $ring-text-color;
+
+  //  This is a carefully tested set of fonts, do not touch without consulting with UI designers
+  font-size: $font-size;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+// To be used at large sizes
+// As close as possible to Helvetica Neue Thin (to replace Gotham)
+@mixin ring-thin-font() {
+  font-weight: 100; // Renders Helvetica Neue UltraLight on OS X
+  font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+@mixin ring-monospace-font() {
+  font: 12px Menlo, "Bitstream Vera Sans Mono", "Ubuntu Mono", "Courier New", Courier, monospace;
+}
+
+@mixin ring-vertical-compensation($compensation: -2px, $position: relative) {
+  position: $position;
+  top: $compensation;
+}
+
+@mixin ring-input-disabled() {
+  border-color: #DEDEDE;
+  background-color: #F8F8F8;
+  color: rgba($ring-text-color, 0.5);
+}
+
+@mixin ring-ellipsis() {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+// Common z-index-values
+
+// Invisible element is an absolutely positioned element which should be below
+// all other elements on the page
+$ring-invisible-element-z-index: -1;
+
+// z-index for position: fixed elements
+$ring-fixed-z-index: 1;
+
+// Elements that should overlay all other elements on the page
+$ring-overlay-z-index: 5;
+
+// Alerts should de displayed above overlays
+$ring-alert-z-index: 6;
+
+// Note: footer also has top margin which isn't taken into account here
+$ring-footer-height: $ring-unit*8;
+
+@keyframes rotation-keyframes {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.ring-loader__canvas {
+  display: block;
+  margin: $ring-unit*2 auto;
+
+  pointer-events: none;
+  animation: rotation-keyframes 36s linear infinite;
+}
+
+.ring-loader__text {
+  text-align: center;
+  @include ring-font();
+}

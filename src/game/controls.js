@@ -1,90 +1,102 @@
-import * as THREE from 'three';
+import * as THREE from 'three'
+import CameraControls from './CameraControls'
 
 // Key constants
-const K_ROCKETPACK = 16;
-const K_FORWARD = 38;
-const K_BACKWARD = 40;
-const K_LEFT = 37;
-const K_RIGHT = 39;
-const K_FORWARD_ALT = 'W'.charCodeAt(0);
-const K_BACKWARD_ALT = 'S'.charCodeAt(0);
-const K_LEFT_ALT = 'A'.charCodeAt(0);
-const K_RIGHT_ALT = 'D'.charCodeAt(0);
+const K_ROCKETPACK = 16
+const K_FORWARD = 38
+const K_BACKWARD = 40
+const K_LEFT = 37
+const K_RIGHT = 39
+const K_FORWARD_ALT = 'W'.charCodeAt(0)
+const K_BACKWARD_ALT = 'S'.charCodeAt(0)
+const K_LEFT_ALT = 'A'.charCodeAt(0)
+const K_RIGHT_ALT = 'D'.charCodeAt(0)
 
-export default class {
+export default class Controls {
+  constructor ({
+    transform, camera, renderer
+  }) {
+    this.transform = transform
+    this.camera = camera
+    this.position = new THREE.Vector3(0, 0, 0)
+    this.rotation = new THREE.Vector3(0, 0, 0)
+    this.keystate = {}
+    this.bindEvents()
 
-    constructor(transform) {
-        this.transform = transform;
-        this.position = new THREE.Vector3(0, 0, 0);
-        this.rotation = new THREE.Vector3(0, 0, 0);
-        this.keystate = {};
-        this.bindEvents();
+    this.cameraControls = new CameraControls(camera, transform)
+    this.cameraControls.enableDamping = true
+    this.cameraControls.dampingFactor = 0.07
+    this.cameraControls.rotateSpeed = 0.04
+    this.cameraControls.minDistance = 3
+    this.cameraControls.maxDistance = 6
+    this.cameraControls.minPolarAngle = Math.PI / 4
+    this.cameraControls.maxPolarAngle = Math.PI / 2
+    this.cameraControls.enablePan = false
+
+    transform.motion = new THREE.Vector3(0, 0, 0)
+    this.moveSpeed = 1.5
+  }
+
+  bindEvents () {
+    window.addEventListener('keydown', (evt) => {
+      this.keystate[evt.which] = true
+    }, false)
+    window.addEventListener('keyup', (evt) => {
+      this.keystate[evt.which] = false
+    }, false)
+  }
+
+  update (delta) {
+    let character = this.transform
+    const moveSpeed = delta * this.moveSpeed
+    let speed = moveSpeed
+    let rotationSpeed = delta * 1.3
+    let rotationDelta = 0
+    let forwardDelta = 0
+    let newMotion = new THREE.Vector3(0, 0, 0)
+    if (this.keystate[K_ROCKETPACK]) {
+      newMotion.y += delta * 0.11
+    }
+    if (character.grounded) {
+      if (this.keystate[K_FORWARD] || this.keystate[K_FORWARD_ALT]) {
+        forwardDelta = -speed
+      }
+      if (this.keystate[K_BACKWARD] || this.keystate[K_BACKWARD_ALT]) {
+        forwardDelta = speed
+      }
+      newMotion.z += forwardDelta
+    }
+    if (this.keystate[K_LEFT] || this.keystate[K_LEFT_ALT]) {
+      rotationDelta = rotationSpeed
+    }
+    if (this.keystate[K_RIGHT] || this.keystate[K_RIGHT_ALT]) {
+      rotationDelta = -rotationSpeed
+    }
+    this.rotation.y += rotationDelta
+    const transformRotationVector = character.rotation.toVector3()
+    transformRotationVector.lerp(this.rotation, 1)
+    character.rotation.setFromVector3(transformRotationVector)
+
+    let rotationMatrix = new THREE.Matrix4().makeRotationY(transformRotationVector.y)
+    newMotion.applyMatrix4(rotationMatrix)
+
+    if (character.grounded) {
+      if (this.keystate[81]) {
+        newMotion.x -= moveSpeed * Math.cos(character.rotation.y)
+        newMotion.z += moveSpeed * Math.sin(character.rotation.y)
+      }
+
+      if (this.keystate[69]) {
+        newMotion.x += moveSpeed * Math.cos(character.rotation.y)
+        newMotion.z -= moveSpeed * Math.sin(character.rotation.y)
+      }
     }
 
-    bindEvents() {
-        // You can only request pointer lock from a user triggered event
-        let el = document.querySelector('canvas');
-        document.body.addEventListener('mousedown', function () {
-            if (!el.requestPointerLock) {
-                el.requestPointerLock = el.mozRequestPointerLock;
-            }
-            el.requestPointerLock();
-        }, false);
+    character.motion.add(newMotion)
 
-        // Update rotation from mouse motion
-        document.body.addEventListener('mousemove', (evt) => {
-            let sensitivity = 0.002;
-            this.rotation.x -= evt.movementY * sensitivity;
-            this.rotation.y -= evt.movementX * sensitivity;
-            // Constrain viewing angle
-            if (this.rotation.x < -Math.PI / 2) {
-                this.rotation.x = -Math.PI / 2;
-            }
-            if (this.rotation.x > Math.PI / 2) {
-                this.rotation.x = Math.PI / 2;
-            }
-        }, false);
-
-        // Update keystate from down/up events
-        window.addEventListener('keydown', (evt) => {
-            this.keystate[evt.which] = true;
-        }, false);
-        window.addEventListener('keyup', (evt) => {
-            this.keystate[evt.which] = false;
-        }, false);
-
-    }
-
-    update(delta) {
-
-        let character = this.transform;
-
-        let speed = delta * 30;
-        let rotationSpeed = delta * 2;
-        character.motion = new THREE.Vector3(0, 0, 0);
-        let motion = character.motion;
-
-        if (this.keystate[K_ROCKETPACK]) {
-            motion.y += delta * 20;
-        }
-        if (this.keystate[K_FORWARD] || this.keystate[K_FORWARD_ALT]) {
-            motion.z -= speed;
-        }
-        if (this.keystate[K_BACKWARD] || this.keystate[K_BACKWARD_ALT]) {
-            motion.z += speed;
-        }
-        if (this.keystate[K_LEFT] || this.keystate[K_LEFT_ALT]) {
-            character.rotation.y += rotationSpeed;
-        }
-        if (this.keystate[K_RIGHT] || this.keystate[K_RIGHT_ALT]) {
-            character.rotation.y -= rotationSpeed;
-        }
-
-        let rotation = new THREE.Matrix4().makeRotationY(character.rotation.y);
-        character.motion.applyMatrix4(rotation);
-
-        character.motion = motion;
-
-    }
-
+    const cameraTargetPosition = character.position.clone()
+    cameraTargetPosition.add(new THREE.Vector3(0, 1, 0))
+    this.cameraControls.target = cameraTargetPosition
+    this.cameraControls.update(delta)
+  }
 }
